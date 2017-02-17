@@ -1,66 +1,49 @@
+function assignValues(_arguments, parseStr, defaultVal) {
 
-
-
-
-
-
-
-
-
-
-function parseNames(parseStr, defaults) {
     var argsArr = [];
-    var level = 1;
+    var level = 0;
 
-    var names = parseStr.split(',');
+    var varNames = parseStr.split(','); // Split the given parseStr exp into names
 
-    names.forEach((name, ind) => {
-        let openBrcCnt = (name.match(/\[/g) || []).length;
-        let closeBrcCnt = (name.match(/\]/g) || []).length;
+    varNames.forEach((name, ind) => {
+        let openBrcCnt = (name.match(/\[/g) || []).length; // Count the number of '[' in the name
+        let closeBrcCnt = (name.match(/\]/g) || []).length; // Count the number of ']' in the name
 
         name = name
             .replace(/ /g, "")
             .replace(/\[/g, "")
-            .replace(/\]/g, "");
-        
-        let ind1 = (level - 1);
-        if (!argsArr[ind1]) {
-            let diff = (ind1 - argsArr.length) + 1;
+            .replace(/\]/g, ""); // remove ' ', '[' & ']'
+
+        if (!argsArr[level]) {
+            let diff = (level - argsArr.length) + 2;
             for (let i = 0; i < diff; i++) {
                 argsArr.push([]);
             }
         }
-        argsArr[ind1].push({
+        argsArr[level].push({
             name: name,
-            level: ind1,
+            level: level,
             ind: ind,
-            value: defaults.args[ind]
+            val: defaultVal.args[ind]
         });
 
         level += openBrcCnt - closeBrcCnt;
     })
 
-    console.log('argsArr:', argsArr);
-
-    return argsArr;
-}
-
-
-function assignValues(args, argsArr) {
-    var len = args.length;
+    var len = _arguments.length;
 
     var i = 0;
     var flatArgs = [];
-     argsArr.forEach((arg, ind) => {
+    argsArr.forEach((arg, ind) => {
         arg.forEach((a) => {
-            if (args[i]) {
+            if (_arguments[i]) {
                 if (ind > 0) {
 
                     var notAssgn = flatArgs.every((a1, ind1) => {
                         if (a1.ind > a.ind) {
-                            a.value = a1.value;
+                            a.val = a1.val;
                             for (var j = ind1; j < flatArgs.length; j++) {
-                                flatArgs[j].value = flatArgs[j + 1] ? flatArgs[j + 1].value : args[i];
+                                flatArgs[j].val = flatArgs[j + 1] ? flatArgs[j + 1].val : _arguments[i];
                             }
                             flatArgs.splice(ind1, 0, a);
                             return false;
@@ -69,12 +52,12 @@ function assignValues(args, argsArr) {
                     })
 
                     if (notAssgn) {
-                        a.value = args[i];
+                        a.val = _arguments[i];
                         flatArgs.push(a);
                     }
 
                 } else {
-                    a.value = args[i];
+                    a.val = _arguments[i];
                     flatArgs.push(a);
                 }
                 i++;
@@ -84,14 +67,18 @@ function assignValues(args, argsArr) {
         })
     })
 
+    // console.log('flatArgs:', flatArgs);
     return flatArgs;
 }
 
-var parser = function (args, vars, defaults) {
-    var varNames = parseNames(vars, defaults);
-    var assignedVal =  assignValues(args, varNames);
-
-    return assignedVal.map(a => a.value);
-}
+var parser = function(_arguments, parseStr, defaultVal) {
+        return assignValues(_arguments, parseStr, defaultVal).map(a => a.val);
+    }
+    // var parser = function (args, vars, defaults) {
+    //     // var varNames = parseNames(vars, defaults);
+    //     var assignedVal =  assignValues(args, varNames);
+    //
+    //     return assignedVal.map(a => a.val);
+    // }
 
 module.exports = parser;
